@@ -1,67 +1,90 @@
-
-const express =require('express')
-const morgan=require('morgan')
-const app = express()
+//Basic dependancies
+const express=require('express')
+const app=express()
 const http=require('http')
-const port=3000
-const hostname='localhost'
-const mongoose=require('mongoose')
-const promoRouter=require('./routes/promoRouter')
-const leaderRouter=require('./routes/leaderRouter')
-require('dotenv').config();
-const uri=process.env.MONGO_URI
-const passport=require('passport')
-const config=require('./config')
+const morgan=require('morgan')
 const session=require('express-session')
-const userRouter=require('./routes/users')
+const mongoose=require('mongoose')
+const MongoDBStore = require('connect-mongodb-session')(session);
 
-// const Filestore=require('session-file-store')
-try {
-  // Connect to the MongoDB cluster
-   mongoose.connect(
-    uri,
-    { useNewUrlParser: true, useUnifiedTopology: true },
-    () => console.log(" Mongoose is connected")
-  );
 
-} catch (e) {
-  console.log("could not connect");
+//Auth
+
+const bodyParser=require('body-parser')
+const cookieParser=require('cookie-parser')
+const passport=require('passport')
+const authenticate=require("./authenticate")
+const config=require("./config")
+
+
+
+//Routes
+const dishRouter=require("./routes/dishRouter")
+const userRouter=require("./routes/users")
+const promoRouter=require("./routes/promoRouter")
+const leaderRouter=require("./routes/leaderRouter")
+const favoriteRouter=require("./routes/favoriteRouter")
+
+
+require('dotenv').config()
+const uri=process.env.MONGO_URI
+
+try{
+    mongoose.connect(uri,{ useNewUrlParser: true, useUnifiedTopology: true,useCreateIndex:true},
+        () => console.log("Mongoose is connected")
+      );
+    }
+catch{
+    err=>{
+        console.log(err)
+        console.log("Coudn't connect")
+    }
 }
 
-app.use(session({
-  name:'session-id',
-  secret:config.secretKey,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
-}))
-
+const store = new MongoDBStore({
+    uri:uri,
+    collection: 'mySessions'
+  });
 
 app.use(morgan('dev'))
+app.use(bodyParser.urlencoded({extended:false}))
+app.use(bodyParser.json())
+// app.use(expressValidator())
+app.use(cookieParser())
+
+
+
+app.use(session({
+    name:"session-id",
+    secret: '1234-4321-1234--4321',
+    resave: false,
+    saveUninitialized:true,
+    store:store
+    // cookie: { secure: true }
+  }))
+
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use('/users',userRouter)
-const auth=(req,res,next)=>{
-
-if(!req.user){
- var err=new Error("You are not authenticated")
- err.status=401
- return next(err)
-}
-else(next())
-}
-
-app.use(auth)
+app.use("/users",userRouter)
 
 
+app.use("/dishes",dishRouter)
+app.use("/leaders",leaderRouter)
+app.use("/promotions",promoRouter)
+app.use("/favorites",favoriteRouter)
 
-app.use('/leaders',leaderRouter)
-app.use('/promotions',promoRouter)
+app.get("/",(req,res)=>{
+    console.log(req.user)
+    res.send("HOME PAGE")
+})
 
+http.createServer(app)
 
-const server=http.createServer(app)
+const PORT=process.env.PORT||3443
 
-server.listen(port,hostname,()=>{
-    console.log(`Connected to http://${hostname}:${port}`)
+const hostname="localhost"
+
+app.listen(PORT,hostname,()=>{
+    console.log(`Connected to http://${hostname}:${PORT}`)
 })
