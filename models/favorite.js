@@ -3,12 +3,11 @@ const Schema=mongoose.Schema
 
 const dishSchema=new Schema({
 
-    dishId:{
+    "_id":{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Dishes'
     }
 })
-
 
 const favoriteSchema=new Schema({
     

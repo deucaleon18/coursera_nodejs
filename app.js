@@ -7,7 +7,6 @@ const session=require('express-session')
 const mongoose=require('mongoose')
 const MongoDBStore = require('connect-mongodb-session')(session);
 
-
 //Auth
 
 const bodyParser=require('body-parser')
@@ -15,8 +14,6 @@ const cookieParser=require('cookie-parser')
 const passport=require('passport')
 const authenticate=require("./authenticate")
 const config=require("./config")
-
-
 
 //Routes
 const dishRouter=require("./routes/dishRouter")
@@ -49,7 +46,6 @@ const store = new MongoDBStore({
 app.use(morgan('dev'))
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(bodyParser.json())
-// app.use(expressValidator())
 app.use(cookieParser())
 
 
@@ -75,7 +71,6 @@ app.use("/promotions",promoRouter)
 app.use("/favorites",favoriteRouter)
 
 app.get("/",(req,res)=>{
-    console.log(req.user)
     res.send("HOME PAGE")
 })
 

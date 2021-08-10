@@ -97,7 +97,7 @@ dishRouter
     authenticate.verifyAdmin,
     async (req, res, next) => {
       await Dishes.findByIdAndUpdate(
-        req.params.leaderId,
+        req.params.dishId,
         { $set: req.body },
         { new: true }
       )
